@@ -1,145 +1,108 @@
 // ==UserScript==
-// @name         Ensis IDLE丨放置之刃 中文汉化脚本
-// @namespace    http://tampermonkey.net/
-// @version      1.2.3
-// @description  中文汉化脚本，安装即可用，带开关汉化的菜单（要在油猴菜单开关）
-// @author       技术支持：麦子、JAR、小蓝、好阳光的小锅巴   翻译君：林雷丨LinLei_Baruch
-// @match        https://cerbion.net/ensis-idle/
+// @name         Cnsis IDLE 简中汉化脚本
+// @namespace    https://www.g8hh.com.cn/
+// @version      0.0.1
+// @description  网页游戏 Cnsis IDLE (https://www.xxxxx.com/) 的简体中文汉化脚本。Simplified Chinese i18n script for web game Cnsis IDLE.
+// @author       好阳光的小锅巴 & 麦子 || 翻译君：林雷丨LinLei_Baruch
+// @copyright    锅巴汉化
+// @contributionUR    https://gityx.com/donate/intro.html
+// @icon         https://cerbion.net/ensis-idle/ensis-icon.png
+// @license      MIT
+// @include      *https://cerbion.net/ensis-idle/*
+// @grant        none
+// @website      https://www.gityx.com/
+// @updateURL    https://g8hh.com.cn/zh/tampermonkey/ensis-idle-chs.user.js
+// @downloadURL    https://g8hh.com.cn/zh/tampermonkey/ensis-idle-chs.user.js
 // ==/UserScript==
+/**
+ * ---------------------------
+ * Time: 2026/04/13 11:04
+ * Author: guoba
+ * View: https://www.gityx.com/
+ * ---------------------------
+ */
+//1.汉化杂项
+var cnItems = {
+    _OTHER_: [],
 
-(function() {
-    'use strict';
-
-    // ================= 开关控制 =================
-    const isEnabled = GM_getValue('translation_enabled', true);
-    GM_registerMenuCommand(isEnabled ? "🟢 汉化已开启 (点击关闭)" : "🔴 汉化已关闭 (点击开启)", () => {
-        GM_setValue('translation_enabled', !isEnabled);
-        location.reload();
-    });
-
-    const isBgRunEnabled = GM_getValue('background_run_enabled', false);
-    GM_registerMenuCommand(isBgRunEnabled ? "🟢 后台挂机已开启 (点击关闭)" : "🔴 后台挂机已关闭 (点击开启)", () => {
-        GM_setValue('background_run_enabled', !isBgRunEnabled);
-        location.reload();
-    });
-
-    // ================= 后台挂机注入 =================
-    if (isBgRunEnabled) {
-        // 1. 媒体播放法：通过播放极低音量的循环音频，欺骗浏览器保持后台活跃 (解决浏览器底层的节流休眠)
-        const startBackgroundAudio = () => {
-            if (window.__bgAudioStarted) return;
-            const audio = new Audio('https://download.samplelib.com/mp3/sample-9s.mp3');
-            audio.loop = true;
-            audio.volume = 0.01; // 音量极低，不影响正常使用
-
-            audio.play().then(() => {
-                window.__bgAudioStarted = true;
-                console.log("🟢 锅巴汉化：后台挂机音频已启动，浏览器防休眠已激活！");
-            }).catch(() => {
-                // 如果被浏览器自动播放策略拦截，静默等待用户交互
-            });
-        };
-
-        // 尝试在页面加载时立即播放
-        startBackgroundAudio();
-
-        // 监听用户交互以绕过浏览器的自动播放限制（只要玩家点了一下页面，立刻启动挂机）
-        const initAudioOnInteract = () => {
-            startBackgroundAudio();
-            if (window.__bgAudioStarted) {
-                document.removeEventListener('click', initAudioOnInteract);
-                document.removeEventListener('keydown', initAudioOnInteract);
-            }
-        };
-        document.addEventListener('click', initAudioOnInteract);
-        document.addEventListener('keydown', initAudioOnInteract);
-
-        // 2. 页面可见性劫持：防止某些游戏自带的代码检测到切换标签页而自动暂停
-        const bgScript = document.createElement('script');
-        bgScript.textContent = `
-            (function() {
-                try {
-                    Object.defineProperty(document, 'hidden', { get: () => false });
-                    Object.defineProperty(document, 'webkitHidden', { get: () => false });
-                    Object.defineProperty(document, 'visibilityState', { get: () => 'visible' });
-
-                    const events = ['visibilitychange', 'webkitvisibilitychange', 'blur', 'focus', 'pagehide'];
-                    for (let ev of events) {
-                        document.addEventListener(ev, e => e.stopImmediatePropagation(), true);
-                        window.addEventListener(ev, e => e.stopImmediatePropagation(), true);
-                    }
-                    console.log("🟢 锅巴汉化：游戏防暂停劫持已激活！");
-                } catch (e) {}
-            })();
-        `;
-        if (document.head || document.documentElement) {
-            (document.head || document.documentElement).appendChild(bgScript);
-            bgScript.remove(); // 保持DOM整洁
-        }
-    }
-
-    if (!isEnabled) {
-        console.log("汉化注入器已关闭。");
-        return;
-    }
-
-    // ================= 后台挂机注入 =================
-    if (isBgRunEnabled) {
-        const bgScript = document.createElement('script');
-        bgScript.textContent = `
-            (function() {
-                try {
-                    // 获取原生的 hidden 属性 getter
-                    const hiddenGetter = Object.getOwnPropertyDescriptor(Document.prototype, 'hidden')?.get;
-
-                    // 强制覆盖页面的可见性状态，欺骗游戏
-                    Object.defineProperty(document, 'hidden', { get: () => false });
-                    Object.defineProperty(document, 'webkitHidden', { get: () => false });
-                    Object.defineProperty(document, 'visibilityState', { get: () => 'visible' });
-
-                    // 在捕获阶段拦截可见性变化和失焦事件
-                    const events = ['visibilitychange', 'webkitvisibilitychange', 'blur', 'focus', 'pagehide'];
-                    for (let ev of events) {
-                        document.addEventListener(ev, e => e.stopImmediatePropagation(), true);
-                        window.addEventListener(ev, e => e.stopImmediatePropagation(), true);
-                    }
-
-                    // 劫持 requestAnimationFrame，后台时降级为 setTimeout，防止游戏循环彻底停止
-                    const originalRAF = window.requestAnimationFrame;
-                    const originalCAF = window.cancelAnimationFrame;
-                    window.requestAnimationFrame = function(cb) {
-                        const isHidden = hiddenGetter ? hiddenGetter.call(document) : false;
-                        if (isHidden) {
-                            return setTimeout(() => cb(performance.now()), 1000 / 60);
-                        } else {
-                            return originalRAF(cb);
-                        }
-                    };
-                    window.cancelAnimationFrame = function(id) {
-                        clearTimeout(id);
-                        originalCAF(id);
-                    };
-                    console.log("🟢 锅巴汉化：后台挂机防暂停模式已激活");
-                } catch (e) {
-                    console.error("后台挂机脚本注入失败:", e);
-                }
-            })();
-        `;
-        // 注入到页面环境中以绕过沙盒限制
-        if (document.head || document.documentElement) {
-            (document.head || document.documentElement).appendChild(bgScript);
-            bgScript.remove(); // 保持DOM整洁
-        }
-    }
-
-    if (!isEnabled) {
-        console.log("汉化注入器已关闭。");
-        return;
-    }
-
-    // ================= 字典数据 =================
-    const cnItems = {
-
+    //设置
+    'Save': '保存',
+    'Export': '导出',
+    'Import': '导入',
+    'Settings': '设置',
+    'Achievements': '成就',
+    'Statistics': '统计',
+    'Changelog': '更新日志',
+    'Hotkeys': '快捷键',
+    'ALL': '全部',
+    'Default': '默认',
+    'AUTO': '自动',
+    'default': '默认',
+    "points": "点数",
+    "Reset for +": "重置得到 + ",
+    "Currently": "当前",
+    "Effect": "效果",
+    "Cost": "成本",
+    "Goal:": "目标:",
+    "Reward": "奖励",
+    "Start": "开始",
+    "Exit Early": "提前退出",
+    "Finish": "完成",
+    "Milestone Gotten!": "获得里程碑！",
+    "Milestones": "里程碑",
+    "Completed": "已完成",
+    "Default Save": "默认存档",
+    "Delete": "删除",
+    "No": "否",
+    "Saves": "存档",
+    "Options": "选项",
+    "Yes": "是",
+    "Are you sure?": "你确定吗？",
+    "Edit Name": "编辑名称",
+    "Info": "信息",
+    "Currently:": "当前:",
+    "Appearance": "外观",
+    "How the game looks.": "游戏看起来如何。",
+    "Theme": "主题",
+    "Show milestones": "显示里程碑",
+    "Show TPS meter at the bottom-left corner of the page.": "在页面左下角显示 TPS。",
+    "Show TPS": "显示 TPS",
+    "None": "无",
+    "Align modifier units": "对齐概览单位",
+    "Align numbers to the beginning of the unit in modifier view.": "在概览视图中将数字与单元的开头对齐。",
+    "Select which milestones to display based on criterias.": "根据标准选择要显示的里程碑。",
+    "All": "全部",
+    "Classic": "经典",
+    "Configurable": "可配置",
+    "Duplicate": "复制",
+    "Mute": "静音",
+    "Unmute": "播放",
+    "Email": "邮箱",
+    "Password": "密码",
+    "Forgot Password?": "忘记密码?",
+    "Login": "登录",
+    "or": "或",
+    "Play as Guest": "以游客身份进行游戏",
+    "Register": "注册",
+    "Sign in with Google": "使用 Google 账户授权登录",
+    "alchemy": "炼金",
+    "Alchemy": "炼金",
+    "Cooking": "烹饪",
+    "cooking": "烹饪",
+    "firemaking": "生火",
+    "Firemaking": "生火",
+    "fishing": "钓鱼",
+    "Fishing": "钓鱼",
+    "Woodcutting": "伐木",
+    "woodcutting": "伐木",
+    "crafting": "制作",
+    "Crafting": "制作",
+    "hunting": "狩猎",
+    "Hunting": "狩猎",
+    "Mining": "采矿",
+    "mining": "采矿",
+    "Monsters": "怪物",
+    "You": "你",
         //Settings 设置
         'Return to Game': '返回游戏',
         'Settings': '设置',
@@ -789,144 +752,545 @@
         'Minor UI issues on smaller screens':'较小屏幕上的轻微UI问题',
         'New areas falsely showing as completed':'新区域错误显示为已完成的问题',
         'Unique event order resetting on reload':'重新加载时独特事件顺序重置的问题',
+    "": "",
+    "TOTAL:": "总计:",
+    "Download as .txt": "以 .txt 格式下载",
+    "Export to Clipboard": "导出到剪贴板",
+    "Import from File": "从文件导入",
+    "Import from text": "从文本导入",
+    "Manual": "手动",
+    "idle": "空闲",
+    "Clones are generating": "克隆体生成",
+    "The surroundings nets you": "周围的环境给予你",
+    "from the site.": "从现场。",
+    "You stumbled across": "你偶然发现了",
+    "An": "一个",
+    "here.": "这里.",
+    "Gathered:": "采集了:",
+    ", it's yours now.": "，现在它是你的了。",
+    ". Into the pack it goes.": "。把它放进包里。",
+    ". Worth keeping.": "。值得保存。",
+    "After exploring the location,": "在探索了这个地点后，",
+    "After searching the region,": "在搜索了这个区域之后，",
+    "after searching the vicinity.": "在搜索了附近地区之后。",
+    "As you explore the location, you come across": "当你探索这个地点时，你遇到了",
+    "As you scour the region, you come across": "当你在这片区域搜寻时，你遇到了",
+    "As you search the site, you come across": "当你搜索现场时，你遇到",
+    "Half-hidden nearby: a": "半藏在附近的：一个",
+    "Looking around the location to scavenge, you manage to uncover": "四处寻找寻找的地点，你终于发现了",
+    "Making sure to carefully explore the surroundings. Your efforts pay off as you discover": "确保仔细调查该地点。你的努力得到了回报，因为你发现了",
+    "Making sure to carefully investigate the site. Your efforts pay off as you discover": "确保仔细搜寻地形。你的努力得到了回报，因为你发现了",
+    "Making sure to carefully scavenge the terrain. Your efforts pay off as you discover": "确保仔细搜查该区域。你的努力得到了回报，因为你发现了",
+    "Making sure to carefully search the region. Your efforts pay off as you discover": "一定要仔细搜索这个区域。当你发现时，你的努力会得到回报",
+    "nothing": "什么都没有",
+    "nothing of interest": "没什么有趣的",
+    "nothing useful": "没什么用",
+    "Taking time to scavenge the surroundings, you stumble upon": "你花时间四处搜寻，偶然发现",
+    "Taking time to search the vicinity, you stumble upon": "你花时间仔细查看周围环境，偶然发现",
+    "The region nets you": "该地区给予了你",
+    "turns up.": "出现了。",
+    "You managed to gather": "你成功收集到了",
+    "You retrieved an": "你取回了一个",
+    "You scavenge the area and find": "你搜寻这个区域并发现",
+    "You scour the location and find": "你搜索了这个位置，找到了",
+    "You scout the surroundings and find": "你观察周围的环境并发现",
+    "Ash production": "灰烬产出",
+    "Building Maxlevel:": "建筑最高等级：",
+    "Cloning cost": "克隆成本",
+    "Construction time": "建造时间",
+    "dropped Runes": "掉落的符文",
+    "Exploration time": "探索时间",
+    "Research speed": "研究速度",
+    "Training speed": "训练速度",
+    "Travel time": "旅行时间",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "Buckler": "圆盾",
+    "Amulet": "护符",
+    "Wraps": "外衣",
+    "Skirt": "裙子",
+    "Sandals": "凉鞋",
+    "Robe": "长袍",
+    "Hat": "帽子",
+    "Pants": "裤子",
+    "Hood": "兜帽",
+    "Vest": "背心",
+    "Shield": "盾牌",
+    "Ring": "戒指",
+    "Platelegs": "板腿",
+    "Platebody": "板甲",
+    "Helmet": "头盔",
+    "Gloves": "手套",
+    "Boots": "靴子",
+    // 图标代码，不能汉化
+    "Jacorb's Games": "Jacorb's Games",
+    "???": "???",
+    "Gityx": "Gityx",
+    "G8hh": "G8hh",
+    "Cerbion": "Cerbion",
+    ").": ").",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "•": "•",
+    "% ": "% ",
+    "$": "$",
+    "#": "#",
+    "/": "/",
+    "]": "]",
+    "[": "[",
+    ">>": ">>",
+    ">": ">",
+    "<<": "<<",
+    "<": "<",
+    "%": "%",
+    "+": "+",
+    ".": ".",
+    "…": "…",
+    ":": ":",
+    "-": "-",
+    "|": "|",
+    "(": "(",
+    ")": ")",
+    "Scientific": "科学计数法",
+    "Standard": "标准",
+    "Blind": "盲文",
+    "Letters": "字母",
+    "Mixed Engineering": "混合工程",
+    "Mixed Scientific": "混合科学",
+    "Chemistry": "化学",
+    "Engineering": "工程符号",
+    "By Jacorb90": "By Jacorb90",
+    "content_copy": "content_copy",
+    "library_books": "library_books",
+    "discord": "discord",
+    "drag_handle": "drag_handle",
+    "edit": "edit",
+    "forum": "forum",
+    "content_paste": "content_paste",
+    "delete": "delete",
+    "info": "info",
+    "settings": "settings",
+    'Twitter': 'Twitter',
+    "Discord": "Discord",
+    "Facebook": "Facebook",
+    "Instagram": "Instagram",
+    "gityxcom": "gityxcom",
+    "Footer": "Footer",
+    "Wiki": "Wiki",
+    "gityx": "gityx",
 
-        // 过滤不需要汉化的文本
-        'I': 'I',
-        'II': 'I',
-        'III': 'III',
-        'IV': 'IV',
-        'V': 'V',
-        'VI': 'VI',
-        'VII': 'VII',
-        'VIII': 'VIII',
-        'X': 'X',
-        'XI': 'XI',
-        'XII': 'XII',
-        'XIII': 'XIII',
-        'XIV': 'XIV',
-        'XV': 'XV',
-        'XVI': 'XVI',
-        'A': 'A',
-        'B': 'B',
-        'C': 'C',
-        'D': 'D',
-        'E': 'E',
-        'F': 'F',
-        'G': 'G',
-        'H': 'H',
-        'I': 'I',
-        'J': 'J',
-        'K': 'K',
-        'L': 'L',
-        'M': 'M',
-        'N': 'N',
-        'O': 'O',
-        'P': 'P',
-        'Q': 'Q',
-        'R': 'R',
-        'S': 'S',
-        'T': 'T',
-        'U': 'U',
-        'V': 'V',
-        'W': 'W',
-        'X': 'X',
-        'Y': 'Y',
-        'Z': 'Z',
-        '': '',
-        '': '',
-        '': '',
-        '': '',
-        '': '',
-        '': '',
-    };
+    //树游戏
+    'Loading...': '加载中...',
+    'ALWAYS': '一直',
+    'HARD RESET': '硬重置',
+    'Export to clipboard': '导出到剪切板',
+    'INCOMPLETE': '不完整',
+    'HIDDEN': '隐藏',
+    'AUTOMATION': '自动',
+    'NEVER': '从不',
+    'ON': '打开',
+    'OFF': '关闭',
+    'SHOWN': '显示',
+    'Play Again': '再次游戏',
+    'Keep Going': '继续',
+    'The Modding Tree Discord': '模型树Discord',
+    'You have': '你有',
+    'It took you {{formatTime(player.timePlayed)}} to beat the game.': '花费了 {{formatTime(player.timePlayed)}} 时间去通关游戏.',
+    'Congratulations! You have reached the end and beaten this game, but for now...': '恭喜你！ 您已经结束并通关了本游戏，但就目前而言...',
+    'Main Prestige Tree server': '主声望树服务器',
+    'Reach {{formatWhole(ENDGAME)}} to beat the game!': '达到 {{formatWhole(ENDGAME)}} 去通关游戏!',
+    "Loading... (If this takes too long it means there was a serious error!": "正在加载...（如果这花费的时间太长，则表示存在严重错误！",
+    'Loading... (If this takes too long it means there was a serious error!)←': '正在加载...（如果时间太长，则表示存在严重错误！）←',
+    'Main\n\t\t\t\tPrestige Tree server': '主\n\t\t\t\t声望树服务器',
+    'The Modding Tree\n\t\t\t\t\t\t\tDiscord': '模型树\n\t\t\t\t\t\t\tDiscord',
+    'Please check the Discord to see if there are new content updates!': '请检查 Discord 以查看是否有新的内容更新！',
+    'aqua': '水色',
+    'AUTOMATION, INCOMPLETE': '自动化，不完整',
+    'LAST, AUTO, INCOMPLETE': '最后，自动，不完整',
+    'NONE': '无',
+    'P: Reset for': 'P: 重置获得',
+    'Git游戏': 'Git游戏',
+    'QQ群号': 'QQ群号',
+    'x': 'x',
+    'QQ群号:': 'QQ群号:',
+    '* 启用后台游戏': '* 启用后台游戏',
+    '更多同类游戏:': '更多同类游戏:',
+    'i': 'i',
+    'I': 'I',
+    'II': 'II',
+    'III': 'III',
+    'IV': 'IV',
+    'V': 'V',
+    'VI': 'VI',
+    'VII': 'VII',
+    'VIII': 'VIII',
+    'X': 'X',
+    'XI': 'XI',
+    'XII': 'XII',
+    'XIII': 'XIII',
+    'XIV': 'XIV',
+    'XV': 'XV',
+    'XVI': 'XVI',
+    'A': 'A',
+    'B': 'B',
+    'C': 'C',
+    'D': 'D',
+    'E': 'E',
+    'F': 'F',
+    'G': 'G',
+    'H': 'H',
+    'I': 'I',
+    'J': 'J',
+    'K': 'K',
+    'L': 'L',
+    'M': 'M',
+    'N': 'N',
+    'O': 'O',
+    'P': 'P',
+    'Q': 'Q',
+    'R': 'R',
+    'S': 'S',
+    'T': 'T',
+    'U': 'U',
+    'V': 'V',
+    'W': 'W',
+    'X': 'X',
+    'Y': 'Y',
+    'Z': 'Z',
+    'a': 'a',
+    'b': 'b',
+    'c': 'c',
+    'd': 'd',
+    'e': 'e',
+    'f': 'f',
+    'g': 'g',
+    'h': 'h',
+    'i': 'i',
+    'j': 'j',
+    'k': 'k',
+    'l': 'l',
+    'm': 'm',
+    'n': 'n',
+    'o': 'o',
+    'p': 'p',
+    'q': 'q',
+    'r': 'r',
+    's': 's',
+    't': 't',
+    'u': 'u',
+    'v': 'v',
+    'w': 'w',
+    'x': 'x',
+    'y': 'y',
+    'z': 'z',
+    '<': '<',
+    '<<': '<<',
+    '>': '>',
+    '>>': '>>',
+    'Jan': '1月',
+    'Feb': '2月',
+    'Mar': '3月',
+    'Apr': '4月',
+    'May': '5月',
+    'Jun': '6月',
+    'Jul': '7月',
+    'Aug': '8月',
+    'Sep': '9月',
+    'Oct': '10月',
+    'Nov': '11月',
+    'Dec': '12月',
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+}
 
-    //需处理的前缀，此处可以截取语句开头部分的内容进行汉化
-    const cnPrefix = {
-        "\n": "\n",
-        "                   ": "",
-        "                  ": "",
-        "                 ": "",
-        "                ": "",
-        "               ": "",
-        "              ": "",
-        "             ": "",
-        "            ": "",
-        "           ": "",
-        "          ": "",
-        "         ": "",
-        "        ": "",
-        "       ": "",
-        "      ": "",
-        "     ": "",
-        "    ": "",
-        "   ": "",
-        "  ": " ",
-        " ": " ",
-        //树游戏
-        "\t\t\t": "\t\t\t",
-        "\n\n\t\t": "\n\n\t\t",
-        "\n\t\t": "\n\t\t",
-        "\t": "\t",
-        "Show Milestones: ": "显示里程碑：",
-        "Autosave: ": "自动保存: ",
-        "Offline Prod: ": "离线生产: ",
-        "Completed Challenges: ": "完成的挑战: ",
-        "High-Quality Tree: ": "高质量树贴图: ",
-        "Offline Time: ": "离线时间: ",
-        "Theme: ": "主题: ",
-        "Anti-Epilepsy Mode: ": "抗癫痫模式：",
-        "In-line Exponent: ": "直列指数：",
-        "Single-Tab Mode: ": "单标签模式：",
-        "Time Played: ": "已玩时长：",
-        "Shift-Click to Toggle Tooltips: ": "Shift-单击以切换工具提示：",
-        "Level:": "等级:",
-        'OBLITERATE':'湮灭',
-        'FORM BODY':'重塑肉身',
-        "REQ:": "需求:",
-        "": "",
-        "": "",
-        "": "",
-        "": "",
-        "": "",
-    };
 
-    //需处理的后缀，此处可以截取语句结尾部分的内容进行汉化
-    //例如：13 Coin、14 Coin、15 Coin... 这种有相同结尾的语句
-    //可以在这里汉化结尾：" Coin":" 金币"
-    const cnPostfix = {
-        "                   ": "",
-        "                  ": "",
-        "                 ": "",
-        "                ": "",
-        "               ": "",
-        "              ": "",
-        "             ": "",
-        "            ": "",
-        "           ": "",
-        "          ": "",
-        "         ": "",
-        "        ": "",
-        "       ": "",
-        "      ": "",
-        "     ": "",
-        "    ": "",
-        "   ": "",
-        "  ": "  ",
-        " ": " ",
-        "\n": "\n",
-        "\n\t\t\t": "\n\t\t\t",
-        "\t\t\n\t\t": "\t\t\n\t\t",
-        "\t\t\t\t": "\t\t\t\t",
-        "\n\t\t": "\n\t\t",
-        "\t": "\t",
+//需处理的前缀
+var cnPrefix = {
+    "\n": "\n",
+    "                   ": "                   ",
+    "                  ": "                  ",
+    "                 ": "                 ",
+    "                ": "                ",
+    "               ": "               ",
+    "              ": "              ",
+    "             ": "             ",
+    "            ": "            ",
+    "           ": "           ",
+    "          ": "          ",
+    "         ": "         ",
+    "        ": "        ",
+    "       ": "       ",
+    "      ": "      ",
+    "     ": "     ",
+    "    ": "    ",
+    "   ": "   ",
+    "  ": "  ",
+    " ": " ",
+    //树游戏
+    "\t\t\t": "\t\t\t",
+    "\n\n\t\t": "\n\n\t\t",
+    "\n\t\t": "\n\t\t",
+    "\t": "\t",
+    "Show Milestones: ": "显示里程碑：",
+    "Autosave: ": "自动保存: ",
+    "Offline Prod: ": "离线生产: ",
+    "Completed Challenges: ": "完成的挑战: ",
+    "High-Quality Tree: ": "高质量树贴图: ",
+    "Offline Time: ": "离线时间: ",
+    "Theme: ": "主题: ",
+    "Anti-Epilepsy Mode: ": "抗癫痫模式：",
+    "In-line Exponent: ": "直列指数：",
+    "Single-Tab Mode: ": "单标签模式：",
+    "Time Played: ": "已玩时长：",
+    "Shift-Click to Toggle Tooltips: ": "Shift-单击以切换工具提示：",
+    "Notation: ": "符号: ",
+    "Toggle Music: ": "切换声音: ",
+    "Animations: ": "动画: ",
+    "Current Endgame: ": "当前终局: ",
+    "Space Background: ": "太空背景: ",
+    "Level:": "等级:",
+    'OBLITERATE':'湮灭',
+    'FORM BODY':'重塑肉身',
+    "REQ:": "需求:",
+    "LEVEL: ": "等级: ",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+}
+
+//需处理的后缀
+var cnPostfix = {
+    "                   ": "",
+    "                  ": "",
+    "                 ": "",
+    "                ": "",
+    "               ": "",
+    "              ": "",
+    "             ": "",
+    "            ": "",
+    "           ": "",
+    "          ": "",
+    "         ": "",
+    "        ": "",
+    "       ": "",
+    "      ": "",
+    "     ": "",
+    "    ": "",
+    "   ": "",
+    "  ": "  ",
+    " ": " ",
+    "\n": "\n",
+    "\n\t\t\t": "\n\t\t\t",
+    "\t\t\n\t\t": "\t\t\n\t\t",
+    "\t\t\t\t": "\t\t\t\t",
+    "\n\t\t": "\n\t\t",
+    "\t": "\t",
+    ' I': ' I',
+    ' II': ' II',
+    ' III': ' III',
+    ' IV': ' IV',
+    ' V': ' V',
+    ' VI': ' VI',
+    ' VII': ' VII',
+    ' VIII': ' VIII',
+    ' X': ' X',
+    ' XI': ' XI',
+    ' XII': ' XII',
+    ' XIII': ' XIII',
+    ' XIV': ' XIV',
+    ' XV': ' XV',
+    ' XVI': ' XVI',
+    "/sec)": "/秒)",
+    "% bonus": "% 奖励",
+    " day(s)": " 天",
         'ASH': '灰烬',
         "CLONES": "克隆体",
         "LV": "等级",
         "XP": "经验",
-    };
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+    "": "",
+}
 
-    //需排除的，正则匹配
-    const cnExcludeWhole = [
+//需排除的，正则匹配
+var cnExcludeWhole = [
+    /^(\d+)$/,
+    /^\s*$/, //纯空格
+    /^([\d\.]+):([\d\.]+)$/,
+    /^([\d\.]+):([\d\.]+):([\d\.]+)$/,
+    /^([\d\.]+):([\d\.]+):([\d\.]+):([\d\.]+)$/,
+    /^([\d\.]+):([\d\.]+):([\d\.]+):([\d\.]+):([\d\.]+)$/,
+    /^([\d\.]+)s$/,
+    /^([\d\.]+)h$/,
+    /^([\d\.]+)m$/,
+    /^([\d\.]+)m ([\d\.]+)s$/,
+    /^([\d\.]+)h ([\d\.]+)m ([\d\.]+)s$/,
+    /^([\d\.]+)d ([\d\.]+)h ([\d\.]+)m ([\d\.]+)s$/,
+    /^([\d\.]+)y ([\d\.]+)d ([\d\.]+)h ([\d\.]+)m ([\d\.]+)s$/,
+    /^([\d\.]+)y ([\d\.]+)d ([\d\.]+)h$/,
+    /^([\d\.]+)\-([\d\.]+)\-([\d\.]+)$/,
+    /^([\d\.]+)e([\d\.,]+)$/,
+    /^([\d\.]+)$/,
+    /^×([\d\.]+)ˣ$/,
+    /^×([\d\.]+)$/,
+    /^x([\d\.]+)$/,
+    /^v([\d\.]+)$/,
+    /^\$([\d\.]+)$/,
+    /^\(([\d\.]+)\)$/,
+    /^([\d\.]+)\%$/,
+    /^\+([\d\.]+)\%$/,
+    /^([\d\.]+)\/([\d\.]+)$/,
+    /^([\d\.]+)\/([\d\.,]+)$/,
+    /^([\d\.,]+)\/([\d\.,]+)$/,
+    /^\(([\d\.]+)\/([\d\.]+)\)$/,
+    /^成本(.+)$/,
+    /^\(([\d\.]+)\%\)$/,
+    /^([\d\.]+):([\d\.]+):([\d\.]+)$/,
+    /^([\d\.]+)\-([\d\.]+)\-([\d\.]+)$/,
+    /^([\d\.]+)\/([\d\.]+)\/([\d\.]+)$/,
+    /^([\d\.]+)\-([\d\.]+)\-([\d\.]+) ([\d\.]+):([\d\.]+):([\d\.]+)$/,
+    /^([\d\.]+)\/([\d\.]+)\/([\d\.]+) ([\d\.]+):([\d\.]+):([\d\.]+)$/,
+    /^\[([\d\.]+):([\d\.]+):([\d\.]+)\]$/,
+    /^([\d\.]+)K$/,
+    /^([\d\.]+)M$/,
+    /^([\d\.]+)B$/,
+    /^([\d\.]+) K$/,
+    /^([\d\.]+) M$/,
+    /^([\d\.]+) B$/,
+    /^([\d\.]+) T$/,
+    /^([\d\.]+) Qi$/,
+    /^([\d\.]+) Qa$/,
+    /^([\d\.]+) Sp$/,
+    /^([\d\.]+) Oc$/,
+    /^([\d\.]+) Dc$/,
+    /^([\d\.]+) UDc$/,
+    /^([\d\.]+) No$/,
+    /^([\d\.]+) Sx$/,
+    /^([\d\.]+) QaDc$/,
+    /^([\d\.]+) QiDc$/,
+    /^([\d\.]+) SxDc$/,
+    /^([\d\.]+) Decillion$/,
+    /^([\d\.]+) DDc$/,
+    /^([\d\.]+) TrDc$/,
+    /^([\d\.]+) SpTg$/,
+    /^([\d\.]+) Million$/,
+    /^([\d\.]+) OcDc$/,
+    /^([\d\.]+) NoDc$/,
+    /^([\d\.]+) SpDc$/,
+    /^([\d\.]+) Quadrillion$/,
+    /^([\d\.]+)s$/,
+    /^([\d\.]+)x$/,
+    /^x([\d\.]+)$/,
+    /^\/([\d\.]+)$/,
+    /^([\d\.,]+)$/,
+    /^\$([\d\.,]+)$/,
+    /^\+([\d\.,]+)$/,
+    /^\-([\d\.,]+)$/,
+    /^([\d\.,]+)x$/,
+    /^([\d\.,]+) ([\d\.,]+)$/,
+    /^([\d\.,]+)\u2009([\d\.,]+)$/,
+    /^ ([\d\.,]+) \> ([\d\.,]+)$/,
+    /^x([\d\.,]+)$/,
+    /^×([\d\.,]+)$/,
+    /^:([\d\.,]+)$/,
+    /^([\d\.,]+) \/$/,
+    /^([\d\.,]+) \/ ([\d\.,]+)$/,
+    /^([\d\.,]+) \/ ([\d\.,]+) \+ ([\d\.,]+)$/,
+    /^([\d\.]+)e([\d\.,]+)$/,
+    /^([\d\.]+)e([\d\.,]+) \/ ([\d\.]+)e([\d\.,]+)$/,
+    /^\$([\d\.]+)e([\d\.,]+)$/,
+    /^([\d\.,]+)\/([\d\.]+)e([\d\.,]+)$/,
+    /^([\d\.]+)e([\d\.,]+)\/([\d\.]+)e([\d\.,]+)$/,
+    /^([\d\.]+)e\+([\d\.,]+)$/,
+    /^e([\d\.]+)e([\d\.,]+)$/,
+    /^x([\d\.]+)e([\d\.,]+)$/,
+    /^([\d\.]+)e([\d\.,]+)x$/,
         /^(\d+)$/, /^\s*$/, /^([\d\.]+):([\d\.]+)$/, /^([\d\.]+):([\d\.]+):([\d\.]+)$/,
         /^([\d\.]+):([\d\.]+):([\d\.]+):([\d\.]+):([\d\.]+)$/, /^([\d\.]+)h ([\d\.]+)m ([\d\.]+)s$/,
         /^([\d\.]+)y ([\d\.]+)d ([\d\.]+)h$/, /^([\d\.]+)\-([\d\.]+)\-([\d\.]+)$/,
@@ -939,18 +1303,173 @@
         /^([\d\.]+)e([\d\.,]+)$/, /^([\d\.,]+)\/([\d\.]+)e([\d\.,]+)$/,
         /^([\d\.]+)e([\d\.,]+)\/([\d\.]+)e([\d\.,]+)$/, /^([\d\.]+)e\+([\d\.,]+)$/,
         /^e([\d\.]+)e([\d\.,]+)$/, /^x([\d\.]+)e([\d\.,]+)$/, /^([\d\.]+)e([\d\.,]+)x$/,
-        /^[\u4E00-\u9FA5]+$/
-    ];
+    // /^([\uD800-\uDBFF][\uDC00-\uDFFF])|([\u2600-\u27BF])|([\u2300-\u23FF])|([\u2B50-\u2B55])|([\u203C-\u3299])|[\u21A9\u21AA\u25B6\u25C0\u2B06\u2B07\u2B05\u2B95\u2B99\u2B9A]+$/,
+    // /^([\uD800-\uDBFF][\uDC00-\uDFFF])|([\u2600-\u27BF])|([\u2300-\u23FF])|([\u2B50-\u2B55])|([\u203C-\u3299])+$/,
+    // /^[\uD800-\uFFFF]+$/,
+    /^[\u4E00-\u9FA5]+$/
+];
+var cnExcludePostfix = []
 
-    const cnExcludePostfix = [];
-
-    //正则替换，带数字的固定格式句子
-    //纯数字：(\d+)
-    //逗号：([\d\.,]+)
-    //小数点：([\d\.]+)
-    //原样输出的字段：(.+)
-    //换行加空格：\n(.+)
-    const cnRegReplace = new Map([
+//正则替换，带数字的固定格式句子
+//纯数字：(\d+)
+//逗号：([\d\.,]+)
+//小数点：([\d\.]+)
+//原样输出的字段：(.+)
+var cnRegReplace = new Map([
+    [/^([\d\.]+) hours ([\d\.]+) minutes ([\d\.]+) seconds$/, '$1 小时 $2 分钟 $3 秒'],
+    [/^You are gaining (.+) elves per second$/, '你每秒获得 $1 精灵'],
+    [/^You have (.+) points$/, '你有 $1 点数'],
+    [/^Next at (.+) points$/, '下一个在 $1 点数'],
+    [/^Jan ([\d\.,]+)$/, '1 月 $1'],
+    [/^Feb ([\d\.,]+)$/, '2 月 $1'],
+    [/^Mar ([\d\.,]+)$/, '3 月 $1'],
+    [/^Apr ([\d\.,]+)$/, '4 月 $1'],
+    [/^May ([\d\.,]+)$/, '5 月 $1'],
+    [/^Jun ([\d\.,]+)$/, '6 月 $1'],
+    [/^Jul ([\d\.,]+)$/, '7 月 $1'],
+    [/^Aug ([\d\.,]+)$/, '8 月 $1'],
+    [/^Sep ([\d\.,]+)$/, '9 月 $1'],
+    [/^Oct ([\d\.,]+)$/, '10 月 $1'],
+    [/^Nov ([\d\.,]+)$/, '11 月 $1'],
+    [/^Dec ([\d\.,]+)$/, '12 月 $1'],
+    [/^January, ([\d\.,]+)$/, '$1 年 1 月'],
+    [/^February, ([\d\.,]+)$/, '$1 年 2 月'],
+    [/^March, ([\d\.,]+)$/, '$1 年 3 月'],
+    [/^April, ([\d\.,]+)$/, '$1 年 4 月'],
+    [/^May, ([\d\.,]+)$/, '$1 年 5 月'],
+    [/^June, ([\d\.,]+)$/, '$1 年 6 月'],
+    [/^July, ([\d\.,]+)$/, '$1 年 7 月'],
+    [/^August, ([\d\.,]+)$/, '$1 年 8 月'],
+    [/^September, ([\d\.,]+)$/, '$1 年 9 月'],
+    [/^October, ([\d\.,]+)$/, ' $1 年 10 月'],
+    [/^November, ([\d\.,]+)$/, ' $1 年 11 月'],
+    [/^December, ([\d\.,]+)$/, ' $1 年 12 月'],
+    [/^Jan ([\d\.,]+) ([\d\.,]+), ([\d\.,]+):([\d\.,]+)$/, '$2 年 1 月 $1, $3:$4'],
+    [/^Feb ([\d\.,]+) ([\d\.,]+), ([\d\.,]+):([\d\.,]+)$/, '$2 年 2 月 $1, $3:$4'],
+    [/^Mar ([\d\.,]+) ([\d\.,]+), ([\d\.,]+):([\d\.,]+)$/, '$2 年 3 月 $1, $3:$4'],
+    [/^Apr ([\d\.,]+) ([\d\.,]+), ([\d\.,]+):([\d\.,]+)$/, '$2 年 4 月 $1, $3:$4'],
+    [/^May ([\d\.,]+) ([\d\.,]+), ([\d\.,]+):([\d\.,]+)$/, '$2 年 5 月 $1, $3:$4'],
+    [/^Jun ([\d\.,]+) ([\d\.,]+), ([\d\.,]+):([\d\.,]+)$/, '$2 年 6 月 $1, $3:$4'],
+    [/^Jul ([\d\.,]+) ([\d\.,]+), ([\d\.,]+):([\d\.,]+)$/, '$2 年 7 月 $1, $3:$4'],
+    [/^Aug ([\d\.,]+) ([\d\.,]+), ([\d\.,]+):([\d\.,]+)$/, '$2 年 8 月 $1, $3:$4'],
+    [/^Sep ([\d\.,]+) ([\d\.,]+), ([\d\.,]+):([\d\.,]+)$/, '$2 年 9 月 $1, $3:$4'],
+    [/^Oct ([\d\.,]+) ([\d\.,]+), ([\d\.,]+):([\d\.,]+)$/, '$2 年 10 月 $1, $3:$4'],
+    [/^Nov ([\d\.,]+) ([\d\.,]+), ([\d\.,]+):([\d\.,]+)$/, '$2 年 11 月 $1, $3:$4'],
+    [/^Dec ([\d\.,]+) ([\d\.,]+), ([\d\.,]+):([\d\.,]+)$/, '$2 年 12 月 $1, $3:$4'],
+	[/^Jan ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) AM$/, '1月 $1 上午 $2:$3:$4'],
+	[/^Feb ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) AM$/, '2月 $1 上午 $2:$3:$4'],
+	[/^Mar ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) AM$/, '3月 $1 上午 $2:$3:$4'],
+	[/^Apr ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) AM$/, '4月 $1 上午 $2:$3:$4'],
+	[/^May ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) AM$/, '5月 $1 上午 $2:$3:$4'],
+	[/^Jun ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) AM$/, '6月 $1 上午 $2:$3:$4'],
+	[/^Jul ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) AM$/, '7月 $1 上午 $2:$3:$4'],
+	[/^Aug ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) AM$/, '8月 $1 上午 $2:$3:$4'],
+	[/^Sep ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) AM$/, '9月 $1 上午 $2:$3:$4'],
+	[/^Oct ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) AM$/, '10月 $1 上午 $2:$3:$4'],
+	[/^Nov ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) AM$/, '11月 $1 上午 $2:$3:$4'],
+	[/^Dec ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) AM$/, '12月 $1 上午 $2:$3:$4'],
+	[/^Jan ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) PM$/, '1月 $1 下午 $2:$3:$4'],
+	[/^Feb ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) PM$/, '2月 $1 下午 $2:$3:$4'],
+	[/^Mar ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) PM$/, '3月 $1 下午 $2:$3:$4'],
+	[/^Apr ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) PM$/, '4月 $1 下午 $2:$3:$4'],
+	[/^May ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) PM$/, '5月 $1 下午 $2:$3:$4'],
+	[/^Jun ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) PM$/, '6月 $1 下午 $2:$3:$4'],
+	[/^Jul ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) PM$/, '7月 $1 下午 $2:$3:$4'],
+	[/^Aug ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) PM$/, '8月 $1 下午 $2:$3:$4'],
+	[/^Sep ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) PM$/, '9月 $1 下午 $2:$3:$4'],
+	[/^Oct ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) PM$/, '10月 $1 下午 $2:$3:$4'],
+	[/^Nov ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) PM$/, '11月 $1 下午 $2:$3:$4'],
+	[/^Dec ([\d\.]+), ([\d\.]+):([\d\.]+):([\d\.]+) PM$/, '12月 $1 下午 $2:$3:$4'],
+	[/^Jan ([\d\.]+), ([\d\.]+) AM$/, '1月 $1 上午 $2'],
+	[/^Feb ([\d\.]+), ([\d\.]+) AM$/, '2月 $1 上午 $2'],
+	[/^Mar ([\d\.]+), ([\d\.]+) AM$/, '3月 $1 上午 $2'],
+	[/^Apr ([\d\.]+), ([\d\.]+) AM$/, '4月 $1 上午 $2'],
+	[/^May ([\d\.]+), ([\d\.]+) AM$/, '5月 $1 上午 $2'],
+	[/^Jun ([\d\.]+), ([\d\.]+) AM$/, '6月 $1 上午 $2'],
+	[/^Jul ([\d\.]+), ([\d\.]+) AM$/, '7月 $1 上午 $2'],
+	[/^Aug ([\d\.]+), ([\d\.]+) AM$/, '8月 $1 上午 $2'],
+	[/^Sep ([\d\.]+), ([\d\.]+) AM$/, '9月 $1 上午 $2'],
+	[/^Oct ([\d\.]+), ([\d\.]+) AM$/, '10月 $1 上午 $2'],
+	[/^Nov ([\d\.]+), ([\d\.]+) AM$/, '11月 $1 上午 $2'],
+	[/^Dec ([\d\.]+), ([\d\.]+) AM$/, '12月 $1 上午 $2'],
+	[/^Jan ([\d\.]+), ([\d\.]+) PM$/, '1月 $1 下午 $2'],
+	[/^Feb ([\d\.]+), ([\d\.]+) PM$/, '2月 $1 下午 $2'],
+	[/^Mar ([\d\.]+), ([\d\.]+) PM$/, '3月 $1 下午 $2'],
+	[/^Apr ([\d\.]+), ([\d\.]+) PM$/, '4月 $1 下午 $2'],
+	[/^May ([\d\.]+), ([\d\.]+) PM$/, '5月 $1 下午 $2'],
+	[/^Jun ([\d\.]+), ([\d\.]+) PM$/, '6月 $1 下午 $2'],
+	[/^Jul ([\d\.]+), ([\d\.]+) PM$/, '7月 $1 下午 $2'],
+	[/^Aug ([\d\.]+), ([\d\.]+) PM$/, '8月 $1 下午 $2'],
+	[/^Sep ([\d\.]+), ([\d\.]+) PM$/, '9月 $1 下午 $2'],
+	[/^Oct ([\d\.]+), ([\d\.]+) PM$/, '10月 $1 下午 $2'],
+	[/^Nov ([\d\.]+), ([\d\.]+) PM$/, '11月 $1 下午 $2'],
+	[/^Dec ([\d\.]+), ([\d\.]+) PM$/, '12月 $1 下午 $2'],
+	[/^Jan (.+), ([\d\.]+)$/, '$2 年 1 月 $1'],
+	[/^Feb (.+), ([\d\.]+)$/, '$2 年 2 月 $1'],
+	[/^Mar (.+), ([\d\.]+)$/, '$2 年 3 月 $1'],
+	[/^Apr (.+), ([\d\.]+)$/, '$2 年 4 月 $1'],
+	[/^May (.+), ([\d\.]+)$/, '$2 年 5 月 $1'],
+	[/^Jun (.+), ([\d\.]+)$/, '$2 年 6 月 $1'],
+	[/^Jul (.+), ([\d\.]+)$/, '$2 年 7 月 $1'],
+	[/^Aug (.+), ([\d\.]+)$/, '$2 年 8 月 $1'],
+	[/^Sep (.+), ([\d\.]+)$/, '$2 年 9 月 $1'],
+	[/^Oct (.+), ([\d\.]+)$/, '$2 年 10 月 $1'],
+	[/^Nov (.+), ([\d\.]+)$/, '$2 年 11 月 $1'],
+	[/^Dec (.+), ([\d\.]+)$/, '$2 年 12 月 $1'],
+	[/^January ([\d\.]+) Theme$/, '$1 年 1 月 主题'],
+	[/^February ([\d\.]+) Theme$/, '$1 年 2 月 主题'],
+	[/^March ([\d\.]+) Theme$/, '$1 年 3 月 主题'],
+	[/^April ([\d\.]+) Theme$/, '$1 年 4 月 主题'],
+	[/^May ([\d\.]+) Theme$/, '$1 年 5 月 主题'],
+	[/^June ([\d\.]+) Theme$/, '$1 年 6 月 主题'],
+	[/^July ([\d\.]+) Theme$/, '$1 年 7 月 主题'],
+	[/^August ([\d\.]+) Theme$/, '$1 年 8 月 主题'],
+	[/^September ([\d\.]+) Theme$/, '$1 年 9 月 主题'],
+	[/^October ([\d\.]+) Theme$/, '$1 年 10 月 主题'],
+	[/^November ([\d\.]+) Theme$/, '$1 年 11 月 主题'],
+	[/^December ([\d\.]+) Theme$/, '$1 年 12 月 主题'],
+	[/^Jan ([\d\.]+) \- Jan ([\d\.]+)$/, '1 月 $1 \- 1 月 $2'],
+	[/^Feb ([\d\.]+) \- Feb ([\d\.]+)$/, '2 月 $1 \- 2 月 $2'],
+	[/^Mar ([\d\.]+) \- Mar ([\d\.]+)$/, '3 月 $1 \- 3 月 $2'],
+	[/^Apr ([\d\.]+) \- Apr ([\d\.]+)$/, '4 月 $1 \- 4 月 $2'],
+	[/^May ([\d\.]+) \- May ([\d\.]+)$/, '5 月 $1 \- 5 月 $2'],
+	[/^Jun ([\d\.]+) \- Jun ([\d\.]+)$/, '6 月 $1 \- 6 月 $2'],
+	[/^Jul ([\d\.]+) \- Jul ([\d\.]+)$/, '7 月 $1 \- 7 月 $2'],
+	[/^Jun ([\d\.]+) \- Jul ([\d\.]+)$/, '6 月 $1 \- 7 月 $2'],
+	[/^Aug ([\d\.]+) \- Aug ([\d\.]+)$/, '8 月 $1 \- 8 月 $2'],
+	[/^Sep ([\d\.]+) \- Sep ([\d\.]+)$/, '9 月 $1 \- 9 月 $2'],
+	[/^Oct ([\d\.]+) \- Oct ([\d\.]+)$/, '10 月 $1 \- 10 $2'],
+	[/^Nov ([\d\.]+) \- Nov ([\d\.]+)$/, '11 月 $1 \- 11 $2'],
+	[/^Dec ([\d\.]+) \- Dec ([\d\.]+)$/, '12 月 $1 \- 12 $2'],
+	[/^([\d\.]+)\/sec$/, '$1\/秒'],
+	[/^([\d\.,]+)\/sec$/, '$1\/秒'],
+	[/^([\d\.,]+) OOMs\/sec$/, '$1 OOMs\/秒'],
+	[/^([\d\.]+) OOMs\/sec$/, '$1 OOMs\/秒'],
+	[/^([\d\.]+)e([\d\.,]+)\/sec$/, '$1e$2\/秒'],
+    [/^requires ([\d\.]+) more research points$/, '需要$1个研究点'],
+    [/^([\d\.]+)e([\d\.,]+) points$/, '$1e$2 点数'],
+    [/^([\d\.]+) elves$/, '$1 精灵'],
+    [/^\+([\d\.]+) elves$/, '+$1 精灵'],
+    [/^\+([\d\.]+)\% elves$/, '+$1% 精灵'],
+    [/^([\d\.]+)d ([\d\.]+)h ([\d\.]+)m$/, '$1天 $2小时 $3分'],
+    [/^([\d\.]+)h ([\d\.]+)m$/, '$1小时 $2分'],
+    [/^([\d\.]+)m ([\d\.]+)s$/, '$1分钟 $2秒'],
+    [/^([\d\.]+)e([\d\.,]+) elves$/, '$1e$2 精灵'],
+    [/^([\d\.,]+) elves$/, '$1 精灵'],
+    [/^([\d\.,]+) \(MAX\) \+ ([\d\.,]+)$/, '$1 (最大) + $2'],
+    [/^\+([\d\.,]+) elves$/, '+$1 精灵'],
+    [/^\-([\d\.,]+) elves$/, '-$1 精灵'],
+    [/^Increases base Ash production from your Aura by ([\d\.,]+).$/, '增加光环的基础灰烬产量 $1。'],
+    [/^Level ([\d\.,]+) \+ ([\d\.,]+) \(([\d\.,]+)\)$/, '等级 $1 + $2 ($3)'],
+    [/^Level ([\d\.,]+)$/, '等级 $1'],
+    [/^Lvl ([\d\.,]+)$/, '等级 $1'],
+    [/^Day ([\d\.,]+)$/, '天数 $1'],
+    [/^\*(.+) to electricity gain$/, '\*$1 到电力增益'],
+    [/^Cost: (.+) points$/, '成本：$1 点数'],
+    [/^Req: (.+) elves$/, '要求：$1 精灵'],
+    [/^Req: (.+) \/ (.+) elves$/, '要求：$1 \/ $2 精灵'],
+    [/^Usages: (\d+)\/$/, '用途：$1\/'],
+    [/^workers: (\d+)\/$/, '工人：$1\/'],
         [/^Level ([+\-\d\.,%]+)$/, '等级 $1'],
         [/^([+\-\d\.,%]+) stone$/, '$1 石材'],
         [/^([+\-\d\.,%]+) metal$/, '$1 金属'],
@@ -1048,138 +1567,234 @@
         [/^\s*([+\-\d\.,%]+)h\s+([+\-\d\.,%]+)m\s+([+\-\d\.,%]+)s\s*$/, '$1时 $2分 $3秒'],
         [/^\s*([+\-\d\.,%]+)m\s+([+\-\d\.,%]+)s\s*$/, '$1分 $2秒'],
         [/^\s*([+\-\d\.,%]+)s\s*$/, '$1秒'],
-    ]);
 
-    // ================= 核心翻译逻辑 =================
-    function cnItemByTag(text, itemgroup, node, textori){
-        for (let i in itemgroup){
-            if (i[0] == '.') {
-                let current_node = node;
-                while (current_node){
-                    if ( current_node.classList && current_node.classList.contains(i.substr(1)) ) return itemgroup[i];
-                    else if( current_node.parentElement && current_node.parentElement != document.documentElement ) current_node = current_node.parentElement;
-                    else break;
+]);
+
+var CNITEM_DEBUG = 0;
+
+function cnItemByTag(text, itemgroup, node, textori) {
+    for (let i in itemgroup) {
+        if (i[0] == '.') { //匹配节点及其父节点的class
+            let current_node = node;
+            while (current_node) {
+                if (current_node.classList && current_node.classList.contains(i.substr(1))) {
+                    return itemgroup[i];
+                } else if (current_node.parentElement && current_node.parentElement != document.documentElement) {
+                    current_node = current_node.parentElement;
+                } else {
+                    break;
                 }
             }
-            else if (i[0] == '#'){
-                let current_node = node;
-                while (current_node){
-                    if ( current_node.id == i.substr(1) ) return itemgroup[i];
-                    else if( current_node.parentElement && current_node.parentElement != document.documentElement ) current_node = current_node.parentElement;
-                    else break;
+        } else if (i[0] == '#') { //匹配节点及其父节点的id
+            let current_node = node;
+            while (current_node) {
+                if (current_node.id == i.substr(1)) {
+                    return itemgroup[i];
+                } else if (current_node.parentElement && current_node.parentElement != document.documentElement) {
+                    current_node = current_node.parentElement;
+                } else {
+                    break;
                 }
             }
-            else if (i[0] == '$'){
-                if (document.querySelector(i.substr(1)) != null) return itemgroup[i];
+        } else if (i[0] == '$') { //执行document.querySelector
+            if (document.querySelector(i.substr(1)) != null) {
+                return itemgroup[i];
             }
-            else if (i[0] == '*'){
-                if ( textori.includes(i.substr(1)) ) return itemgroup[i];
+        } else if (i[0] == '*') { //搜索原始文本
+            if (textori.includes(i.substr(1))) {
+                return itemgroup[i];
             }
         }
-        return null;
+        // and more ...
+        else {
+            CNITEM_DEBUG && console.log({ text, itemgroup, dsc: "不识别的标签" + i })
+        }
     }
+    return null;
+}
 
-    function cnItem(text, node) {
-        if (typeof (text) != "string") return text;
-        let textori = text;
+//2.采集新词
+//20190320@JAR  rewrite by 麦子
+var cnItem = function(text, node) {
 
-        let text_prefix = "";
-        for (let prefix in cnPrefix) {
-            if (text.startsWith(prefix)) {
-                text_prefix += cnPrefix[prefix];
-                text = text.substr(prefix.length);
-            }
+    if (typeof(text) != "string")
+        return text;
+    let textori = text;
+    //处理前缀
+    let text_prefix = "";
+    for (let prefix in cnPrefix) {
+        if (text.substr(0, prefix.length) === prefix) {
+            text_prefix += cnPrefix[prefix];
+            text = text.substr(prefix.length);
         }
-
-        let text_postfix = "";
-        for (let postfix in cnPostfix) {
-            if (text.endsWith(postfix)) {
-                text_postfix = cnPostfix[postfix] + text_postfix;
-                text = text.substr(0, text.length - postfix.length);
-            }
-        }
-
-        let text_reg_exclude_postfix = "";
-        for (let reg of cnExcludePostfix) {
-            let result = text.match(reg);
-            if (result) {
-                text_reg_exclude_postfix = result[0] + text_reg_exclude_postfix;
-                text = text.substr(0, text.length - result[0].length);
-            }
-        }
-
-        for (let reg of cnExcludeWhole) {
-            if (reg.test(text)) return text_prefix + text + text_reg_exclude_postfix + text_postfix;
-        }
-
-        for (let [key, value] of cnRegReplace.entries()) {
-            if (key.test(text)) return text_prefix + text.replace(key, value) + text_reg_exclude_postfix + text_postfix;
-        }
-
-        for (let i in cnItems) {
-            if (typeof(cnItems[i]) == "string" && (text == i || text == cnItems[i])){
-                return text_prefix + cnItems[i] + text_reg_exclude_postfix + text_postfix;
-            } else if ( typeof(cnItems[i]) == "object" && text == i ){
-                let result = cnItemByTag(i, cnItems[i], node, textori);
-                if (result != null) return text_prefix + result + text_reg_exclude_postfix + text_postfix;
-            }
-        }
-
-        // 移除了原版收集生词的逻辑，直接返回原词，提升性能
-        return text_prefix + text + text_reg_exclude_postfix + text_postfix;
     }
-
-    // 采用 TreeWalker 替代原版递归，极大提升性能
-    function translateNode(rootNode) {
-        let walker = document.createTreeWalker(rootNode, NodeFilter.SHOW_TEXT, null, false);
-        let textNode;
-        let tasks = [];
-        while (textNode = walker.nextNode()) {
-            let parent = textNode.parentNode;
-            if (parent && (parent.nodeName === 'SCRIPT' || parent.nodeName === 'STYLE' || parent.nodeName === 'TEXTAREA')) continue;
-
-            let originalText = textNode.nodeValue;
-            let translatedText = cnItem(originalText, textNode);
-            if (originalText !== translatedText) {
-                tasks.push({ node: textNode, text: translatedText });
-            }
+    //处理后缀
+    let text_postfix = "";
+    for (let postfix in cnPostfix) {
+        if (text.substr(-postfix.length) === postfix) {
+            text_postfix = cnPostfix[postfix] + text_postfix;
+            text = text.substr(0, text.length - postfix.length);
         }
-        // 统一修改 DOM，避免边遍历边修改造成的重绘卡顿
-        for (let task of tasks) {
-            task.node.nodeValue = task.text;
+    }
+    //处理正则后缀
+    let text_reg_exclude_postfix = "";
+    for (let reg of cnExcludePostfix) {
+        let result = text.match(reg);
+        if (result) {
+            text_reg_exclude_postfix = result[0] + text_reg_exclude_postfix;
+            text = text.substr(0, text.length - result[0].length);
         }
     }
 
-    // ================= 启动与监听 =================
-    console.log("加载汉化模块...");
-    translateNode(document.body);
+    //检验字典是否可存
+    if (!cnItems._OTHER_) cnItems._OTHER_ = [];
 
-    const observer = new MutationObserver(function (mutations) {
-        let tasks = [];
-        for (let mutation of mutations) {
-            if (mutation.type === 'childList') {
+    //检查是否排除
+    for (let reg of cnExcludeWhole) {
+        if (reg.test(text)) {
+            return text_prefix + text + text_reg_exclude_postfix + text_postfix;;
+        }
+    }
+
+    //尝试正则替换
+    for (let [key, value] of cnRegReplace.entries()) {
+        if (key.test(text)) {
+            return text_prefix + text.replace(key, value) + text_reg_exclude_postfix + text_postfix;
+        }
+    }
+
+    //遍历尝试匹配
+    for (let i in cnItems) {
+        //字典已有词汇或译文、且译文不为空，则返回译文
+        if (typeof(cnItems[i]) == "string" && (text == i || text == cnItems[i])) {
+            return text_prefix + cnItems[i] + text_reg_exclude_postfix + text_postfix;
+        } else if (typeof(cnItems[i]) == "object" && text == i) {
+            let result = cnItemByTag(i, cnItems[i], node, textori);
+            if (result != null) {
+                return text_prefix + result + text_reg_exclude_postfix + text_postfix;
+            } else {
+                CNITEM_DEBUG && console.log({ text: i, cnitem: cnItems[i], node });
+            }
+        } else {
+            // continue;
+        }
+    }
+
+    //调整收录的词条，0=收录原文，1=收录去除前后缀的文本
+    let save_cfg = 1;
+    let save_text = save_cfg ? text : textori;
+    //遍历生词表是否收录
+    for (
+        let i = 0; i < cnItems._OTHER_.length; i++
+    ) {
+        //已收录则直接返回
+        if (save_text == cnItems._OTHER_[i])
+            return text_prefix + text + text_reg_exclude_postfix + text_postfix;
+    }
+
+    if (cnItems._OTHER_.length < 1000) {
+        //未收录则保存
+        cnItems._OTHER_.push(save_text);
+        cnItems._OTHER_.sort(
+            function(a, b) {
+                return a.localeCompare(b)
+            }
+        );
+    }
+
+    //开启生词打印
+    CNITEM_DEBUG && console.log(
+        '有需要汉化的英文：', text
+    );
+
+    //返回生词字串
+    return text_prefix + text + text_reg_exclude_postfix + text_postfix;
+};
+
+transTaskMgr = {
+    tasks: [],
+    addTask: function(node, attr, text) {
+        this.tasks.push({
+            node,
+            attr,
+            text
+        })
+    },
+    doTask: function() {
+        let task = null;
+        while (task = this.tasks.pop())
+            task.node[task.attr] = task.text;
+    },
+}
+
+function TransSubTextNode(node) {
+    if (node.childNodes.length > 0) {
+        for (let subnode of node.childNodes) {
+            if (subnode.nodeName === "#text") {
+                let text = subnode.textContent;
+                let cnText = cnItem(text, subnode);
+                cnText !== text && transTaskMgr.addTask(subnode, 'textContent', cnText);
+                //console.log(subnode);
+            } else if (subnode.nodeName !== "SCRIPT" && subnode.nodeName !== "STYLE" && subnode.nodeName !== "TEXTAREA") {
+                if (!subnode.childNodes || subnode.childNodes.length == 0) {
+                    let text = subnode.innerText;
+                    let cnText = cnItem(text, subnode);
+                    cnText !== text && transTaskMgr.addTask(subnode, 'innerText', cnText);
+                    //console.log(subnode);
+                } else {
+                    TransSubTextNode(subnode);
+                }
+            } else {
+                // do nothing;
+            }
+        }
+    }
+}
+
+! function() {
+    console.log("加载汉化模块");
+
+    let observer_config = {
+        attributes: false,
+        characterData: true,
+        childList: true,
+        subtree: true
+    };
+    let targetNode = document.body;
+    //汉化静态页面内容
+    TransSubTextNode(targetNode);
+    transTaskMgr.doTask();
+    //监听页面变化并汉化动态内容
+    let observer = new MutationObserver(function(e) {
+        //window.beforeTransTime = performance.now();
+        observer.disconnect();
+        for (let mutation of e) {
+            if (mutation.target.nodeName === "SCRIPT" || mutation.target.nodeName === "STYLE" || mutation.target.nodeName === "TEXTAREA") continue;
+            if (mutation.target.nodeName === "#text") {
+                mutation.target.textContent = cnItem(mutation.target.textContent, mutation.target);
+            } else if (!mutation.target.childNodes || mutation.target.childNodes.length == 0) {
+                mutation.target.innerText = cnItem(mutation.target.innerText, mutation.target);
+            } else if (mutation.addedNodes.length > 0) {
                 for (let node of mutation.addedNodes) {
-                    if (node.nodeType === Node.TEXT_NODE) {
-                        let originalText = node.nodeValue;
-                        let translatedText = cnItem(originalText, node);
-                        if (originalText !== translatedText) tasks.push({ node: node, text: translatedText });
-                    } else if (node.nodeType === Node.ELEMENT_NODE) {
-                        if (node.nodeName !== "SCRIPT" && node.nodeName !== "STYLE" && node.nodeName !== "TEXTAREA") {
-                            translateNode(node);
+                    if (node.nodeName === "#text") {
+                        node.textContent = cnItem(node.textContent, node);
+                        //console.log(node);
+                    } else if (node.nodeName !== "SCRIPT" && node.nodeName !== "STYLE" && node.nodeName !== "TEXTAREA") {
+                        if (!node.childNodes || node.childNodes.length == 0) {
+                            if (node.innerText)
+                                node.innerText = cnItem(node.innerText, node);
+                        } else {
+                            TransSubTextNode(node);
                         }
                     }
                 }
-            } else if (mutation.type === 'characterData') {
-                let originalText = mutation.target.nodeValue;
-                let translatedText = cnItem(originalText, mutation.target);
-                if (originalText !== translatedText) tasks.push({ node: mutation.target, text: translatedText });
             }
         }
-        for (let task of tasks) {
-            task.node.nodeValue = task.text;
-        }
+        transTaskMgr.doTask();
+        observer.observe(targetNode, observer_config);
+        //window.afterTransTime = performance.now();
+        //console.log("捕获到页面变化并执行汉化，耗时" + (afterTransTime - beforeTransTime) + "毫秒");
     });
-
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-
-})();
+    observer.observe(targetNode, observer_config);
+    window.cnItems = cnItems
+}();
