@@ -729,10 +729,12 @@
         //Changelog 更新日志
         'NEW!':'最新！',
         'Changelog':'更新日志',
+        ' Changelog':'更新日志',
         'Added':'新增',
         'Changed':'更改',
         'Removed':'移除',
         'Fixed':'修复',
+        'NEW!':'新!',
 
         //2026.4.1 更新日志
         'UNIQUE EVENTS ARE RESET! As some of these changelogs get quite long, I will start omitting some of the entries that are just smaller Tweaks and Adjustments without or little gameplay impact.': '特殊事件已重置！由于部分更新日志内容过长，我将开始省略一些仅为小幅优化与调整、对游戏玩法几乎没有影响的条目。',
