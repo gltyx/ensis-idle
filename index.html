@@ -8,18 +8,54 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="css2.css"
-      rel="stylesheet">
-    <script type="module" crossorigin src="./assets/index-CppiY1NC.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      .loader-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        height: 100vh;
+        background: oklch(0.18 0 0);
+      }
+      .loader-svg {
+        width: 64px;
+        height: 64px;
+        animation: loader-spin 2s linear infinite;
+      }
+      .loader-text {
+        margin-top: 1rem;
+        font-family: 'Metamorphous', serif;
+        color: oklch(78.647% 0.12881 84.268);
+        font-size: 1.125rem;
+        letter-spacing: 0.12em;
+      }
+      @keyframes loader-spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+    </style>
+    <script type="module" crossorigin src="./assets/index-CL0ALAGJ.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/rolldown-runtime-COnpUsM8.js">
-    <link rel="modulepreload" crossorigin href="./assets/lucide-react-_NRfGPS_.js">
-    <link rel="modulepreload" crossorigin href="./assets/radix-ui-CwEha_tz.js">
+    <link rel="modulepreload" crossorigin href="./assets/lucide-react-bJZqWPaW.js">
+    <link rel="modulepreload" crossorigin href="./assets/radix-ui-BsFcRyfW.js">
     <link rel="modulepreload" crossorigin href="./assets/decimal-js-2YYCZGJg.js">
-    <link rel="modulepreload" crossorigin href="./assets/vendor-CeU02RNc.js">
-    <link rel="stylesheet" crossorigin href="./assets/index-CmvIfC-_.css">
+    <link rel="modulepreload" crossorigin href="./assets/vendor-DIEbYldx.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-yqRwgJUx.css">
   </head>
   <body>
   <script src="ensis-idle-chs.user.js"></script>
-    <div id="root"></div>
+    <div id="root">
+      <div class="loader-wrapper">
+        <img class="loader-svg" src="./loader.svg" alt="Loading" />
+        <span class="loader-text">Loading...</span>
+      </div>
+    </div>
 <!--客服 开始-->
 <script src="//g8hh.github.io/static/js/jquery.min.js"></script>
 <link rel="stylesheet" href="//g8hh.github.io/static/css/kf.css" type="text/css" media="screen" charset="utf-8">
@@ -36,6 +72,6 @@ var _hmt = _hmt || [];
   s.parentNode.insertBefore(hm, s);
 })();
 </script>
-    </div>
+
   </body>
 </html>
