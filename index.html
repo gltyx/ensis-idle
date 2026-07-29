@@ -5,10 +5,12 @@
     <link rel="icon" type="image/x-icon" href="./ensis-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ensis IDLE by Cerbion</title>
+    <!-- Preload critical loader assets -->
+    <link rel="preload" as="image" href="./loader.svg" fetchpriority="high">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@100..800&family=Metamorphous&display=swap" fetchpriority="high">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="css2.css"
-      rel="stylesheet">
     <style>
       body {
         margin: 0;
@@ -35,28 +37,42 @@
         color: oklch(78.647% 0.12881 84.268);
         font-size: 1.125rem;
         letter-spacing: 0.12em;
+        opacity: 0;
+        transition: opacity 0.15s ease-in;
+      }
+      .fonts-loaded .loader-text {
+        opacity: 1;
       }
       @keyframes loader-spin {
         from { transform: rotate(0deg); }
         to { transform: rotate(360deg); }
       }
     </style>
-    <script type="module" crossorigin src="./assets/index-Dzs5tqYf.js"></script>
+    <script type="module" crossorigin src="./assets/index-QYZnd8vg.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/rolldown-runtime-CNC7AqOf.js">
     <link rel="modulepreload" crossorigin href="./assets/lucide-react-C1XvYkD3.js">
     <link rel="modulepreload" crossorigin href="./assets/radix-ui-BpTy5tUu.js">
     <link rel="modulepreload" crossorigin href="./assets/decimal-js-Bp4IZX4Y.js">
     <link rel="modulepreload" crossorigin href="./assets/vendor-w_rxcYsd.js">
-    <link rel="stylesheet" crossorigin href="./assets/index-GBagDG7a.css">
+    <link rel="stylesheet" crossorigin href="./assets/index-DfJmS_RP.css">
   </head>
   <body>
 <script src="ensis-idle-chs.user.js"></script>
     <div id="root">
       <div class="loader-wrapper">
-        <img class="loader-svg" src="./loader.svg" alt="Loading" />
+        <svg class="loader-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-hidden="true"><path d="M262.97 19.438a221.3 221.3 0 0 0-10.595.375c37.426 5.91 74.12 23.423 102.188 49.624-55.762-26.124-129.46-27.253-186.875-3.5 10.37-9.73 21.777-17.51 33.875-23.343C48.768 80.06-6.44 197.116 56.72 343.938c-16.45-26.78-29.106-55.588-35.626-84.688-5.23 74.055 32.02 134.952 102.47 197.406.06.063.124.126.186.188 12.107 12.125 24.238 22.045 32.875 27.03 64.588 37.292 121.345-63.365 57.78-100.062-11.465-6.62-33.518-14.218-56.56-18.875-76.657-36.295-93.91-155.886-20.282-240.687-6.654 16.82-11.594 34.836-14.844 53.375 76.21-134.99 312.3-129.124 324.124 72.063-10.722-61.622-53.708-113.837-121.03-135.344 56.69 23.942 96.28 79.752 96.28 145.25 0 94.252-72.826 148.403-154.594 165.625 42.582 2.34 94.684-13.826 125.438-36.314-23.357 39.58-72.146 67.082-123.25 81.594 72.736-2.804 136.515-41.146 175.406-97.375-10.316 11.652-22.718 22.04-36.78 30.97 46.54-55.267 70.795-137.97 61.31-210.25 8.428 16.284 13.583 33.51 15.782 51.374C485.26 97.63 372.46 18.3 262.97 19.437z" fill="#fff" fill-opacity="1" transform="translate(512, 0) scale(-1, 1) rotate(0, 256, 256) skewX(0) skewY(0)"></path></svg>
         <span class="loader-text">Loading...</span>
       </div>
     </div>
+    <!-- Reveal loader text once fonts are ready, preventing FOUT -->
+    <script>
+      (function(){
+        var d=document,cls='fonts-loaded',root=d.documentElement;
+        if(d.fonts&&d.fonts.load){d.fonts.load('1em Metamorphous').then(function(){root.classList.add(cls)}).catch(function(){root.classList.add(cls)});
+        // Fallback: reveal text after 3s even if font never loads
+        setTimeout(function(){root.classList.add(cls)},3000)}else{root.classList.add(cls)}
+      })();
+    </script>
 <!--客服 开始-->
 <script src="//g8hh.github.io/static/js/jquery.min.js"></script>
 <link rel="stylesheet" href="//g8hh.github.io/static/css/kf.css" type="text/css" media="screen" charset="utf-8">
@@ -74,6 +90,5 @@ var _hmt = _hmt || [];
 })();
 </script>
 </div>
-
   </body>
 </html>
